@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD com Bootstrap</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #2c2c2c;
+            color: #ffffff;
+        }
+        .card {
+            background-color: #3a3a3a;
+            color: #ffffff;
+        }
+        .btn-primary, .btn-success, .btn-warning, .btn-danger {
+            border: none;
+        }
+        .btn-primary:hover, .btn-success:hover, .btn-warning:hover, .btn-danger:hover {
+            opacity: 0.9;
+        }
+        .table-dark {
+            background-color: #454545;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #565656;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">CRUD com Bootstrap</h1>
+
+        <div id="form-container" class="card p-3 mb-4 d-none">
+            <h2 class="h5">Criar Novo Usuário</h2>
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <input type="text" id="nome" class="form-control" placeholder="Nome">
+                </div>
+                <div class="col-md-6">
+                    <input type="email" id="email" class="form-control" placeholder="Email">
+                </div>
+                <div class="col-md-6 mt-2">
+                    <input type="text" id="phone" class="form-control" placeholder="Telefone">
+                </div>
+                <div class="col-md-6 mt-2">
+                    <input type="text" id="cpf" class="form-control" placeholder="CPF">
+                </div>
+                <div class="col-md-4 mt-2">
+                    <input type="text" id="cep" class="form-control" placeholder="CEP">
+                </div>
+                <div class="col-md-8 mt-2">
+                    <input type="text" id="logradouro" class="form-control" placeholder="Logradouro">
+                </div>
+                <div class="col-md-4 mt-2">
+                    <input type="text" id="number" class="form-control" placeholder="Número">
+                </div>
+                <div class="col-md-4 mt-2">
+                    <input type="text" id="city" class="form-control" placeholder="Cidade">
+                </div>
+                <div class="col-md-4 mt-2">
+                    <input type="text" id="state" class="form-control" placeholder="Estado">
+                </div>
+                <div class="col-md-6 mt-2">
+                    <select id="status" class="form-select">
+                        <option value="ativo">Ativo</option>
+                        <option value="inativo">Inativo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-3 text-end">
+                <button class="btn btn-primary me-2" onclick="createUser()">Salvar</button>
+                <button class="btn btn-secondary" onclick="toggleForm()">Cancelar</button>
+            </div>
+        </div>
+
+        <div class="text-end mb-3">
+            <button class="btn btn-success" onclick="toggleForm()">+ Novo Usuário</button>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-hover text-white" id="user-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Telefone</th>
+                            <th>CPF</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const userTable = document.getElementById('user-table').querySelector('tbody');
+        const formContainer = document.getElementById('form-container');
+
+        async function fetchUsers() {
+            try {
+                const response = await fetch('http://localhost:3000/users');
+                const users = await response.json();
+                renderTable(users);
+            } catch (error) {
+                console.error('Erro ao buscar usuários:', error);
+            }
+        }
+
+        function renderTable(users) {
+            userTable.innerHTML = '';
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.nome}</td>
+                    <td>${user.email}</td>
+                    <td>${user.phone || ''}</td>
+                    <td>${user.cpf || ''}</td>
+                    <td>${user.status || ''}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm me-1" onclick="editUser(${user.id}, '${user.nome}', '${user.email}', '${user.phone}', '${user.cpf}', '${user.status}')">Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteUser(${user.id})">Excluir</button>
+                    </td>
+                `;
+                userTable.appendChild(row);
+            });
+        }
+
+        function toggleForm() {
+            formContainer.classList.toggle('d-none');
+        }
+
+        async function createUser() {
+            const userData = {
+                nome: document.getElementById('nome').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                cpf: document.getElementById('cpf').value,
+                cep: document.getElementById('cep').value,
+                logradouro: document.getElementById('logradouro').value,
+                number: document.getElementById('number').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                status: document.getElementById('status').value,
+            };
+
+            if (!userData.nome || !userData.email) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+
+            try {
+                await fetch('http://localhost:3000/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData),
+                });
+                toggleForm();
+                fetchUsers();
+            } catch (error) {
+                console.error('Erro ao criar usuário:', error);
+            }
+        }
+
+        async function editUser(id, nome, email, phone, cpf, status) {
+            const updatedNome = prompt('Novo nome:', nome);
+            const updatedEmail = prompt('Novo email:', email);
+            const updatedPhone = prompt('Novo telefone:', phone || '');
+            const updatedCpf = prompt('Novo CPF:', cpf || '');
+            const updatedStatus = prompt('Novo status (ativo/inativo):', status || 'ativo');
+
+            if (!updatedNome || !updatedEmail) return;
+
+            try {
+                await fetch(`http://localhost:3000/users/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome: updatedNome, email: updatedEmail, phone: updatedPhone, cpf: updatedCpf, status: updatedStatus }),
+                });
+                fetchUsers();
+            } catch (error) {
+                console.error('Erro ao editar usuário:', error);
+            }
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
+
+            try {
+                await fetch(`http://localhost:3000/users/${id}`, { method: 'DELETE' });
+                fetchUsers();
+            } catch (error) {
+                console.error('Erro ao excluir usuário:', error);
+            }
+        }
+
+        fetchUsers();
+    </script>
+</body>
+</html>

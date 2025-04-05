@@ -1,0 +1,17 @@
+# Usa imagem oficial do Node.js
+FROM node:18
+
+# Define o diretório de trabalho no container
+WORKDIR /app
+
+# Copia os arquivos da pasta atual para o container
+COPY . .
+
+# Instala as dependências
+RUN npm install
+
+# Expõe a porta que o Express usa
+EXPOSE 3000
+
+# Comando para iniciar o servidor
+CMD ["node", "server.js"]
